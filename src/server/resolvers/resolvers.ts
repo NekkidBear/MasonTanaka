@@ -32,7 +32,9 @@ const dateScalar = new GraphQLScalarType({
 
 export const resolvers = {
   Date: dateScalar, // Register the custom Date scalar type
+  Date: dateScalar, // Register the custom Date scalar type
   Query: {
+    // Resolver for fetching multiple accounts
     // Resolver for fetching multiple accounts
     accounts: () => Account.find(),
     // Resolver for fetching a single account by ID
