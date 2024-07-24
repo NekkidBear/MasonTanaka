@@ -43,7 +43,7 @@ const startServer = async () => {
   }
 
   // Retrieve the port number from environment variables or use 4000 as default
-  const port = process.env.PORT || 4000;
+  const port = process.env.PORT || 5001;
   // Start the express application and listen on the specified port
   app.listen({ port }, () =>
     console.log(`Server ready at http://localhost:${port}${server.graphqlPath}`)
