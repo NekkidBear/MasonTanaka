@@ -1,0 +1,22 @@
+type Customer {
+  id: ID!
+  name: String!
+  accounts: [Account!]!
+}
+
+type Account {
+  id: ID!
+  accountNumber: String!
+  transactions: [Transaction!]!
+}
+
+type Transaction {
+  id: ID!
+  date: String!
+  amount: Float!
+  description: String
+}
+
+type Query {
+  customerById(id: ID!): Customer
+}
