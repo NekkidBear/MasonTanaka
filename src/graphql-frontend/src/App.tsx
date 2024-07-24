@@ -1,26 +1,21 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { ApolloProvider } from '@apollo/client';
+import client from 'apollo-client';
+import Accounts from './components/Accounts';
+import Customers from './components/Customers';
+import TransactionBuckets from './components/TransactionBuckets';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ApolloProvider client={client}>
+      <div className="App">
+        <h1>GraphQL Data Display</h1>
+        <Accounts />
+        <Customers />
+        <TransactionBuckets />
+      </div>
+    </ApolloProvider>
   );
-}
+};
 
 export default App;
