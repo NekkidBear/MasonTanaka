@@ -40,12 +40,13 @@ interface TransactionBucket {
 const TransactionBuckets: React.FC = () => {
   const [accountId, setAccountId] = useState<number>(1);
   const { loading, error, data } = useQuery(GET_TRANSACTION_BUCKETS, {
-    variables: { accountId },
+    variables: { accountId }, // Ensure this matches the variable in the query
   });
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
+  // Check if data.transactionBuckets exists before trying to map over it
   return (
     <div>
       <h2>Transaction Buckets</h2>
@@ -55,24 +56,28 @@ const TransactionBuckets: React.FC = () => {
         onChange={(e) => setAccountId(parseInt(e.target.value))}
         placeholder="Enter Account ID"
       />
-      {data.transactionBuckets.map((bucket: TransactionBucket) => (
-        <div key={`${bucket.account_id}-${bucket.bucket_start_date}`}>
-          <h3>Account ID: {bucket.account_id}</h3>
-          <p>Transaction Count: {bucket.transaction_count}</p>
-          <p>Start Date: {bucket.bucket_start_date}</p>
-          <p>End Date: {bucket.bucket_end_date}</p>
-          <h4>Transactions:</h4>
-          <ul>
-            {bucket.transactions.map((transaction: Transaction, index: number) => (
-              <li key={index}>
-                Date: {transaction.date}, Amount: {transaction.amount}, 
-                Code: {transaction.transaction_code}, Symbol: {transaction.symbol}, 
-                Price: {transaction.price}, Total: {transaction.total}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      {data && data.transactionBuckets && data.transactionBuckets.length > 0 ? (
+        data.transactionBuckets.map((bucket: TransactionBucket) => (
+          <div key={`${bucket.account_id}-${bucket.bucket_start_date}`}>
+            <h3>Account ID: {bucket.account_id}</h3>
+            <p>Transaction Count: {bucket.transaction_count}</p>
+            <p>Start Date: {bucket.bucket_start_date}</p>
+            <p>End Date: {bucket.bucket_end_date}</p>
+            <h4>Transactions:</h4>
+            <ul>
+              {bucket.transactions.map((transaction: Transaction, index: number) => (
+                <li key={index}>
+                  Date: {transaction.date}, Amount: {transaction.amount}, 
+                  Code: {transaction.transaction_code}, Symbol: {transaction.symbol}, 
+                  Price: {transaction.price}, Total: {transaction.total}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      ) : (
+        <p>No transaction buckets found for the given account ID.</p>
+      )}
     </div>
   );
 };
