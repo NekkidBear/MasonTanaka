@@ -36,18 +36,18 @@ export const resolvers = {
     // Resolver for fetching multiple accounts
     accounts: () => Account.find(),
     // Resolver for fetching a single account by ID
-    account: (_: any, { account_id }: { account_id: string }) =>
+    account: (_: Record<string, unknown>, { account_id }: { account_id: string }) =>
       Account.findOne({ account_id }),
     // Resolver for fetching multiple customers
     customers: () => Customer.find(),
     // Resolver for fetching a single customer by username
-    customer: (_: any, { username }: { username: string }) =>
+    customer: (_: Record<string, unknown>, { username }: { username: string }) =>
       Customer.findOne({ username }),
     // Resolver for fetching transaction buckets by account ID
-    transactionBuckets: (_: any, { account_id }: { account_id: string }) =>
+    transactionBuckets: (_: Record<string, unknown>, { account_id }: { account_id: string }) =>
       TransactionBucket.find({ account_id }),
     // Resolver for calculating account balances for a given customer
-    accountBalances: async (_: any, { username }: { username: string }) => {
+    accountBalances: async (_: Record<string, unknown>, { username }: { username: string }) => {
       const customer = await Customer.findOne({ username });
       if (!customer) return []; // Return an empty array if the customer is not found
 
@@ -80,8 +80,8 @@ export const resolvers = {
     },
   },
   Customer: {
-    tier_and_details: (parent: any) => {
-      return Object.values(parent.tier_and_details);
+      tier_and_details: (parent: Record<string, unknown>) => {
+        return Object.values(parent.tier_and_details as { [s: string]: unknown });
+      },
     },
-  },
 };
