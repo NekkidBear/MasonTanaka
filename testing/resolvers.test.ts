@@ -1,12 +1,12 @@
-import { resolvers } from '../../src/server/resolvers/resolvers'; // Adjust the import path as necessary
-import { Account } from "../../models/Account";
-import { Customer } from "../../models/Customer";
-import { TransactionBucket } from "../../models/TransactionBucket";
+import { resolvers } from '../src/server/resolvers/resolvers'; 
+import { Customer } from "../src/models/Customer";
+import { TransactionBucket } from "../src/models/TransactionBucket";
+import { Account } from '../src/models/Account';
 
 // Mock the database models
-jest.mock("../../models/Account");
-jest.mock("../../models/Customer");
-jest.mock("../../models/TransactionBucket");
+jest.mock("../src/models/Account");
+jest.mock("../src/models/Customer");
+jest.mock("../src/models/TransactionBucket");
 
 // Troubleshooting Tips:
 // 1. If you encounter "Cannot find module" errors, ensure all dependencies are properly installed and import paths are correct.
@@ -30,7 +30,7 @@ describe('Resolver Tests', () => {
       const timestamp = 1672531200000; // 2023-01-01T00:00:00Z
       const result = resolvers.Date.parseValue(timestamp);
       expect(result).toBeInstanceOf(Date);
-      expect(result.getTime()).toBe(timestamp);
+      expect(result?.getTime()).toBe(timestamp);
     });
 
     // Maintenance Tip: Add tests for edge cases, like invalid inputs
