@@ -1,7 +1,45 @@
-import { ApolloServer } from 'apollo-server-express';
-import { typeDefs } from '../src/server/schema/schema'; // Adjust the import path as necessary
-import { resolvers } from '../src/server/resolvers/resolvers'; // Import resolvers
-import { gql } from 'graphql-tag';
+import { ApolloServer } from "apollo-server-express";
+import { typeDefs } from "../src/server/schema/schema"; // Adjust the import path as necessary
+import { resolvers } from "../src/server/resolvers/resolvers"; // Import resolvers
+import { gql } from "graphql-tag";
+import { Account } from "../src/models/Account";
+import { Customer } from "../src/models/Customer";
+import { TransactionBucket } from "../src/models/TransactionBucket";
+
+jest.mock("../src/models/Account");
+jest.mock("../src/models/Customer");
+jest.mock("../src/models/TransactionBucket");
+
+// Mock data
+const mockAccounts = [
+  { account_id: "1", limit: 1000, products: ["savings", "checkings"] },
+];
+const mockCustomers = [
+  { username: "testUser", name: "Test User", email: "test@example.com" },
+];
+const mockTransactionBuckets = [{ account_id: "1", transactions: [] }];
+
+// Before each test, clear all mocks and set up default mock implementations
+beforeEach(() => {
+  jest.clearAllMocks();
+
+  // Mock implementations
+  (Account.find as jest.Mock).mockImplementation(({ account_id }) =>
+    Promise.resolve(
+      mockAccounts.filter((account) => account.account_id === account_id)
+    )
+  );
+  (Customer.find as jest.Mock).mockImplementation(({ username }) =>
+    Promise.resolve(
+      mockCustomers.filter((customer) => customer.username === username)
+    )
+  );
+  (TransactionBucket.find as jest.Mock).mockResolvedValue(
+    mockTransactionBuckets
+  );
+
+  // Add more mocks as needed for other tests
+});
 
 // Troubleshooting Tips:
 // 1. If you encounter "Cannot find module" errors, ensure all dependencies are properly installed and import paths are correct.
@@ -9,7 +47,7 @@ import { gql } from 'graphql-tag';
 // 3. If tests fail due to unresolved schema elements, verify that your typeDefs and resolvers are correctly defined and imported.
 // 4. Timeout errors may indicate issues with asynchronous operations. Consider increasing Jest's timeout for complex queries.
 
-describe('GraphQL Schema Tests', () => {
+describe("GraphQL Schema Tests", () => {
   let server: ApolloServer;
 
   beforeAll(() => {
@@ -29,7 +67,7 @@ describe('GraphQL Schema Tests', () => {
     await server.stop();
   });
 
-  it('fetches all accounts', async () => {
+  it("fetches all accounts", async () => {
     const GET_ACCOUNTS = gql`
       query {
         accounts {
@@ -44,12 +82,12 @@ describe('GraphQL Schema Tests', () => {
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.accounts).toBeInstanceOf(Array);
-    expect(result.data?.accounts[0]).toHaveProperty('account_id');
-    expect(result.data?.accounts[0]).toHaveProperty('limit');
-    expect(result.data?.accounts[0]).toHaveProperty('products');
+    expect(result.data?.accounts[0]).toHaveProperty("account_id");
+    expect(result.data?.accounts[0]).toHaveProperty("limit");
+    expect(result.data?.accounts[0]).toHaveProperty("products");
   });
 
-  it('fetches a single account', async () => {
+  it("fetches a single account", async () => {
     const GET_ACCOUNT = gql`
       query GetAccount($accountId: Int!) {
         account(account_id: $accountId) {
@@ -66,12 +104,12 @@ describe('GraphQL Schema Tests', () => {
     });
 
     expect(result.errors).toBeUndefined();
-    expect(result.data?.account).toHaveProperty('account_id', 1);
-    expect(result.data?.account).toHaveProperty('limit');
-    expect(result.data?.account).toHaveProperty('products');
+    expect(result.data?.account).toHaveProperty("account_id", 1);
+    expect(result.data?.account).toHaveProperty("limit");
+    expect(result.data?.account).toHaveProperty("products");
   });
 
-  it('fetches all customers', async () => {
+  it("fetches all customers", async () => {
     const GET_CUSTOMERS = gql`
       query {
         customers {
@@ -86,12 +124,12 @@ describe('GraphQL Schema Tests', () => {
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.customers).toBeInstanceOf(Array);
-    expect(result.data?.customers[0]).toHaveProperty('username');
-    expect(result.data?.customers[0]).toHaveProperty('name');
-    expect(result.data?.customers[0]).toHaveProperty('email');
+    expect(result.data?.customers[0]).toHaveProperty("username");
+    expect(result.data?.customers[0]).toHaveProperty("name");
+    expect(result.data?.customers[0]).toHaveProperty("email");
   });
 
-  it('fetches a single customer', async () => {
+  it("fetches a single customer", async () => {
     const GET_CUSTOMER = gql`
       query GetCustomer($username: String!) {
         customer(username: $username) {
@@ -115,14 +153,14 @@ describe('GraphQL Schema Tests', () => {
     });
 
     expect(result.errors).toBeUndefined();
-    expect(result.data?.customer).toHaveProperty('username', 'testUser');
-    expect(result.data?.customer).toHaveProperty('name');
-    expect(result.data?.customer).toHaveProperty('email');
+    expect(result.data?.customer).toHaveProperty("username", "testUser");
+    expect(result.data?.customer).toHaveProperty("name");
+    expect(result.data?.customer).toHaveProperty("email");
     expect(result.data?.customer.accounts).toBeInstanceOf(Array);
     expect(result.data?.customer.tier_and_details).toBeInstanceOf(Array);
   });
 
-  it('fetches transaction buckets', async () => {
+  it("fetches transaction buckets", async () => {
     const GET_TRANSACTION_BUCKETS = gql`
       query GetTransactionBuckets($accountId: Int!) {
         transactionBuckets(account_id: $accountId) {
@@ -150,15 +188,26 @@ describe('GraphQL Schema Tests', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.transactionBuckets).toBeInstanceOf(Array);
     if (result.data?.transactionBuckets.length > 0) {
-      expect(result.data?.transactionBuckets[0]).toHaveProperty('account_id', 1);
-      expect(result.data?.transactionBuckets[0]).toHaveProperty('transaction_count');
-      expect(result.data?.transactionBuckets[0]).toHaveProperty('bucket_start_date');
-      expect(result.data?.transactionBuckets[0]).toHaveProperty('bucket_end_date');
-      expect(result.data?.transactionBuckets[0].transactions).toBeInstanceOf(Array);
+      expect(result.data?.transactionBuckets[0]).toHaveProperty(
+        "account_id",
+        1
+      );
+      expect(result.data?.transactionBuckets[0]).toHaveProperty(
+        "transaction_count"
+      );
+      expect(result.data?.transactionBuckets[0]).toHaveProperty(
+        "bucket_start_date"
+      );
+      expect(result.data?.transactionBuckets[0]).toHaveProperty(
+        "bucket_end_date"
+      );
+      expect(result.data?.transactionBuckets[0].transactions).toBeInstanceOf(
+        Array
+      );
     }
   });
 
-  it('fetches account balances', async () => {
+  it("fetches account balances", async () => {
     const GET_ACCOUNT_BALANCES = gql`
       query GetAccountBalances($username: String!) {
         accountBalances(username: $username) {
@@ -176,10 +225,10 @@ describe('GraphQL Schema Tests', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.accountBalances).toBeInstanceOf(Array);
     if (result.data?.accountBalances.length > 0) {
-      expect(result.data?.accountBalances[0]).toHaveProperty('account_id');
-      expect(result.data?.accountBalances[0]).toHaveProperty('balance');
+      expect(result.data?.accountBalances[0]).toHaveProperty("account_id");
+      expect(result.data?.accountBalances[0]).toHaveProperty("balance");
     }
-  });
+  }, 10000);
 
   // Maintenance Tips:
   // - When adding new fields to your schema, ensure corresponding tests are updated.
