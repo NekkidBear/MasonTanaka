@@ -3,9 +3,10 @@ import { Customer } from "../../models/Customer";
 import { TransactionBucket } from "../../models/TransactionBucket";
 import { GraphQLScalarType, Kind } from "graphql";
 import { MongoClient } from "mongodb";
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
 
-dotenv.config()
+dotenv.config();
+
 // MongoDb setup
 const uri = process.env.MONGODB_CONNECTION_STRING;
 if (!uri) {
@@ -14,7 +15,7 @@ if (!uri) {
 const client = new MongoClient(uri);
 
 interface CustomerBalance {
-  id: string;
+  username: string;
   name: string | undefined;
   accountBalances: { product: string; balance: number }[];
 }
@@ -82,18 +83,29 @@ export const resolvers = {
       }
     },
 
-    customerWithBalances: async (_: never, { id }: { id: string }): Promise<CustomerBalance | null> => {
+    customerWithBalances: async (_: never, { username }: { username: string }): Promise<CustomerBalance | null> => {
       try {
         await client.connect();
         const database = client.db("sample_analytics");
         const collection = database.collection("customers");
+
+        console.log(`Fetching customer with username: ${username}`);
         const pipeline = [
-          { $match: { customer_id: id } },
+          { $match: { username } },
           { $unwind: "$accounts" },
           {
+            $lookup: {
+              from: "accounts",
+              localField: "accounts",
+              foreignField: "account_id",
+              as: "accountDetails"
+            }
+          },
+          { $unwind: "$accountDetails" },
+          {
             $group: {
-              _id: "$accounts.product",
-              balance: { $sum: "$accounts.balance" },
+              _id: "$accountDetails.product",
+              balance: { $sum: "$accountDetails.balance" },
               customer_name: { $first: "$name" }
             },
           },
@@ -106,12 +118,18 @@ export const resolvers = {
             },
           },
         ];
+
+        console.log('Running aggregation pipeline:', JSON.stringify(pipeline, null, 2));
         const result = await collection.aggregate(pipeline).toArray();
+        console.log('Aggregation result:', JSON.stringify(result, null, 2));
+
         if (result.length === 0) {
+          console.warn('No results found for the given username');
           return null;
         }
+
         return {
-          id,
+          username,
           name: result[0].customer_name,
           accountBalances: result.map((item) => ({
             product: item.product,
@@ -126,18 +144,27 @@ export const resolvers = {
       }
     },
 
-    customer: async (_: never, { id }: { id: string }) => {
+    customer: async (_: never, { username }: { username: string }) => {
       try {
         await client.connect();
         const database = client.db("sample_analytics");
         const collection = database.collection("customers");
         const pipeline = [
-          { $match: { customer_id: id } },
+          { $match: { username } },
           { $unwind: "$accounts" },
           {
+            $lookup: {
+              from: "accounts",
+              localField: "accounts",
+              foreignField: "account_id",
+              as: "accountDetails"
+            }
+          },
+          { $unwind: "$accountDetails" },
+          {
             $group: {
-              _id: "$accounts.product",
-              balance: { $sum: "$accounts.balance" },
+              _id: "$accountDetails.product",
+              balance: { $sum: "$accountDetails.balance" },
               customer_name: { $first: "$name" }
             },
           },
@@ -152,7 +179,7 @@ export const resolvers = {
         ];
         const result = await collection.aggregate(pipeline).toArray();
         return {
-          id,
+          username,
           name: result[0]?.customer_name,
           accountBalances: result.map((item) => ({
             product: item.product,
