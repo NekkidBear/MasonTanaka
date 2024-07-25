@@ -26,6 +26,7 @@
     "graphql-tag": "^2.12.6",
     "mongodb": "^6.8.0",
     "mongoose": "^8.5.1",
+    "recharts": "^2.12.7",
     "vite": "^5.3.4"
   },
   "devDependencies": {
