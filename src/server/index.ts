@@ -23,31 +23,30 @@ const startServer = async () => {
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers in requests
     optionsSuccessStatus: 200, // Some legacy browsers choke on 204
   };
-  
+
   /**
    * Explanation of CORS Options:
-   * 
+   *
    * 1. origin:
    *    - Specifies the allowed origins for cross-origin requests.
    *    - Requests from "https://graphql-frontend-gold.vercel.app" and "https://localhost:3000" are permitted.
-   * 
+   *
    * 2. credentials:
    *    - Indicates whether the response to the request can be exposed when the credentials flag is true.
    *    - Allows cookies, authorization headers, or TLS client certificates to be included in requests.
-   * 
+   *
    * 3. methods:
    *    - Specifies the HTTP methods that are allowed when accessing the resource.
    *    - In this case, GET, POST, and OPTIONS methods are permitted.
-   * 
+   *
    * 4. allowedHeaders:
    *    - Specifies the headers that can be used in the actual request.
    *    - "Content-Type" and "Authorization" headers are allowed.
-   * 
+   *
    * 5. optionsSuccessStatus:
    *    - Provides the status code to use for successful OPTIONS requests.
    *    - Some legacy browsers (e.g., IE11) choke on 204, so 200 is used instead.
    */
-  app.use(cors(corsOptions)); // Use CORS middleware with the specified options
 
   // Handle OPTIONS requests
   app.options("*", cors(corsOptions));
@@ -72,6 +71,8 @@ const startServer = async () => {
 
   // Connect ApolloServer middleware to the express application
   server.applyMiddleware({ app, cors: false, path: "/graphql" }); // Disable ApolloServer's built-in CORS handling
+
+  app.use(cors(corsOptions)); // Use CORS middleware with the specified options
 
   // Retrieve MongoDB connection string from environment variables
   const mongodbConnectionString = process.env.MONGODB_CONNECTION_STRING;
