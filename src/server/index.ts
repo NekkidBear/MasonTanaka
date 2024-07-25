@@ -1,15 +1,23 @@
-import express from 'express';
-import { ApolloServer } from 'apollo-server-express';
-import mongoose from 'mongoose';
-import { typeDefs } from './schema/schema'; // GraphQL schema definitions
-import { resolvers } from './resolvers/resolvers'; // GraphQL resolvers
-import dotenv from 'dotenv'; // For loading environment variables from .env file
+import express from "express";
+import { ApolloServer } from "apollo-server-express";
+import mongoose from "mongoose";
+import { typeDefs } from "./schema/schema"; // GraphQL schema definitions
+import { resolvers } from "./resolvers/resolvers"; // GraphQL resolvers
+import dotenv from "dotenv"; // For loading environment variables from .env file
+import cors from "cors";
 
 // Load environment variables
 dotenv.config();
 
 const startServer = async () => {
   const app = express(); // Initialize express application
+
+  // Configure CORS to allow requests from the frontend origin
+  const corsOptions = {
+    origin: "https://graphql-frontend-osd0r3p41-nekkidbears-projects.vercel.app",
+    credentials: true, // Allows credentials (cookies, authorization headers, etc.)
+  };
+  app.use(cors(corsOptions)); // Use CORS middleware with the specified options
 
   // Initialize ApolloServer with type definitions and resolvers for GraphQL
   const server = new ApolloServer({
@@ -21,28 +29,30 @@ const startServer = async () => {
   await server.start();
 
   // Connect ApolloServer middleware to the express application
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app, cors: false }); // Disable ApolloServer's built-in CORS handling
 
   // Retrieve MongoDB connection string from environment variables
   const mongodbConnectionString = process.env.MONGODB_CONNECTION_STRING;
 
   // Check if MongoDB connection string is provided
   if (!mongodbConnectionString) {
-    console.error('MONGODB_CONNECTION_STRING is not defined in the environment variables');
+    console.error(
+      "MONGODB_CONNECTION_STRING is not defined in the environment variables"
+    );
     process.exit(1); // Exit the process with an error code
   }
 
   try {
     // Attempt to connect to MongoDB using the connection string
     await mongoose.connect(mongodbConnectionString);
-    console.log('Connected to MongoDB');
+    console.log("Connected to MongoDB");
   } catch (error) {
     // Log any errors during MongoDB connection attempt
-    console.error('Error connecting to MongoDB:', error);
+    console.error("Error connecting to MongoDB:", error);
     process.exit(1); // Exit the process with an error code
   }
 
-  // Retrieve the port number from environment variables or use 4000 as default
+  // Retrieve the port number from environment variables or use 5001 as default
   const port = process.env.PORT || 5001;
   // Start the express application and listen on the specified port
   app.listen({ port }, () =>
