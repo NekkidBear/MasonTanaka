@@ -14,7 +14,7 @@ const startServer = async () => {
 
   // Configure CORS to allow requests from the frontend origin
   const corsOptions = {
-    origin: "https://graphql-frontend-osd0r3p41-nekkidbears-projects.vercel.app",
+    origin: "https://graphql-frontend-gold.vercel.app/",
     credentials: true, // Allows credentials (cookies, authorization headers, etc.)
   };
   app.use(cors(corsOptions)); // Use CORS middleware with the specified options
