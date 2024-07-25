@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express';
+import { gql } from "apollo-server-express";
 
 export const typeDefs = gql`
   scalar Date
@@ -67,5 +67,6 @@ export const typeDefs = gql`
     customerWithBalances(id: String!): CustomerWithBalances
     transactionBuckets(account_id: Int!): [TransactionBucket!]!
     accountBalances(username: String!): [AccountBalance!]!
+    firstFiveCustomers: [Customer]
   }
 `;

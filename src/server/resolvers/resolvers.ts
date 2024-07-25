@@ -83,7 +83,10 @@ export const resolvers = {
       }
     },
 
-    customerWithBalances: async (_: never, { username }: { username: string }): Promise<CustomerBalance | null> => {
+    customerWithBalances: async (
+      _: never,
+      { username }: { username: string }
+    ): Promise<CustomerBalance | null> => {
       try {
         await client.connect();
         const database = client.db("sample_analytics");
@@ -98,15 +101,15 @@ export const resolvers = {
               from: "accounts",
               localField: "accounts",
               foreignField: "account_id",
-              as: "accountDetails"
-            }
+              as: "accountDetails",
+            },
           },
           { $unwind: "$accountDetails" },
           {
             $group: {
               _id: "$accountDetails.product",
               balance: { $sum: "$accountDetails.balance" },
-              customer_name: { $first: "$name" }
+              customer_name: { $first: "$name" },
             },
           },
           {
@@ -119,12 +122,15 @@ export const resolvers = {
           },
         ];
 
-        console.log('Running aggregation pipeline:', JSON.stringify(pipeline, null, 2));
+        console.log(
+          "Running aggregation pipeline:",
+          JSON.stringify(pipeline, null, 2)
+        );
         const result = await collection.aggregate(pipeline).toArray();
-        console.log('Aggregation result:', JSON.stringify(result, null, 2));
+        console.log("Aggregation result:", JSON.stringify(result, null, 2));
 
         if (result.length === 0) {
-          console.warn('No results found for the given username');
+          console.warn("No results found for the given username");
           return null;
         }
 
@@ -157,15 +163,15 @@ export const resolvers = {
               from: "accounts",
               localField: "accounts",
               foreignField: "account_id",
-              as: "accountDetails"
-            }
+              as: "accountDetails",
+            },
           },
           { $unwind: "$accountDetails" },
           {
             $group: {
               _id: "$accountDetails.product",
               balance: { $sum: "$accountDetails.balance" },
-              customer_name: { $first: "$name" }
+              customer_name: { $first: "$name" },
             },
           },
           {
@@ -191,7 +197,10 @@ export const resolvers = {
       }
     },
 
-    transactionBuckets: async (_: never, { account_id }: { account_id: string }) => {
+    transactionBuckets: async (
+      _: never,
+      { account_id }: { account_id: string }
+    ) => {
       try {
         return await TransactionBucket.find({ account_id });
       } catch (error) {
@@ -238,6 +247,29 @@ export const resolvers = {
         } else {
           throw new Error(String(error));
         }
+      }
+    },
+
+    firstFiveCustomers: async () => {
+      try {
+        await client.connect();
+        const database = client.db("sample_analytics");
+        const collection = database.collection("customers");
+
+        // Fetch the first 5 customers
+        const customers = await collection.find().limit(5).toArray();
+
+        // Return the usernames and names of the first 5 customers
+        return customers.map((customer) => ({
+          username: customer.username,
+          name: customer.name,
+          // other fields if needed...
+        }));
+      } catch (error) {
+        console.error("Error in firstFiveCustomers resolver:", error);
+        throw new Error("Failed to fetch customers");
+      } finally {
+        await client.close();
       }
     },
   },
