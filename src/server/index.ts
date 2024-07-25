@@ -14,10 +14,17 @@ const startServer = async () => {
 
   // Configure CORS to allow requests from the frontend origin
   const corsOptions = {
-    origin: "https://graphql-frontend-osd0r3p41-nekkidbears-projects.vercel.app",
+    origin: "https://graphql-frontend-gold.vercel.app", // Ensure no trailing slash
     credentials: true, // Allows credentials (cookies, authorization headers, etc.)
+    optionsSuccessStatus: 200, // Some legacy browsers choke on 204
   };
   app.use(cors(corsOptions)); // Use CORS middleware with the specified options
+
+  // Log CORS requests for debugging
+  app.use((req, res, next) => {
+    console.log(`CORS request from origin: ${req.headers.origin}`);
+    next();
+  });
 
   // Initialize ApolloServer with type definitions and resolvers for GraphQL
   const server = new ApolloServer({
