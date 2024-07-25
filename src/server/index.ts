@@ -64,6 +64,7 @@ const startServer = async () => {
     typeDefs,
     resolvers,
     context: ({ req, res }) => ({ req, res }),
+    introspection: true,
   });
 
   // Start the ApolloServer
