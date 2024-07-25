@@ -1,3 +1,4 @@
+
 {
   "name": "masontanaka",
   "version": "1.0.0",
@@ -5,7 +6,8 @@
   "scripts": {
     "start": "ts-node ./src/server/index.ts",
     "dev": "nodemon --exec ts-node ./src/server/index.ts",
-    "test": "jest"
+    "test": "jest",
+    "build": "npm install --legacy-peer-deps && next build"
   },
   "keywords": [],
   "author": "",
