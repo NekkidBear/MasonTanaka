@@ -48,11 +48,23 @@ export const typeDefs = gql`
     balance: Float!
   }
 
+  type ProductBalance {
+    product: String!
+    balance: Float!
+  }
+
+  type CustomerWithBalances {
+    id: String!
+    name: String
+    accountBalances: [ProductBalance!]!
+  }
+
   type Query {
     accounts: [Account!]!
     account(account_id: Int!): Account
     customers: [Customer!]!
     customer(username: String!): Customer
+    customerWithBalances(id: String!): CustomerWithBalances
     transactionBuckets(account_id: Int!): [TransactionBucket!]!
     accountBalances(username: String!): [AccountBalance!]!
   }

@@ -2,133 +2,189 @@ import { Account } from "../../models/Account";
 import { Customer } from "../../models/Customer";
 import { TransactionBucket } from "../../models/TransactionBucket";
 import { GraphQLScalarType, Kind } from "graphql";
+import { MongoClient } from "mongodb";
+
+// MongoDb setup
+const uri = process.env.MONGODB_CONNECTION_STRING;
+if (!uri) {
+  throw new Error("MONGODB_CONNECTION_STRING is not defined in the environment variables.");
+}
+const client = new MongoClient(uri);
+
+interface CustomerBalance {
+  id: string;
+  name: string | undefined;
+  accountBalances: { product: string; balance: number }[];
+}
 
 // Define a custom GraphQL scalar type for handling Date objects
 const dateScalar = new GraphQLScalarType({
   name: "Date",
   description: "Date custom scalar type",
   serialize(value: unknown) {
-    // Serialize the Date object into an integer timestamp for JSON responses
     if (value instanceof Date) {
       return value.getTime();
     }
     throw new Error("DateScalar can only serialize Date objects");
   },
   parseValue(value: unknown) {
-    // Parse an integer timestamp from the client into a Date object
     if (typeof value === "number") {
       return new Date(value);
     }
     throw new Error("DateScalar can only parse number values");
   },
   parseLiteral(ast) {
-    // Parse a hard-coded AST value into a Date object
     if (ast.kind === Kind.INT) {
       return new Date(parseInt(ast.value, 10));
     }
-    return null; // Return null if the provided value is not an integer
+    return null;
   },
 });
 
 export const resolvers = {
-  Date: dateScalar, // Register the custom Date scalar type
+  Date: dateScalar,
   Query: {
-    // Resolver for fetching multiple accounts
     accounts: async () => {
       try {
         return await Account.find();
       } catch (error) {
-        // If 'error' is already an Error object, throw it directly.
         if (error instanceof Error) {
           throw error;
         } else {
-          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
           throw new Error(String(error));
         }
       }
     },
-    // Resolver for fetching a single account by ID
-    account: async (
-      _: Record<string, unknown>,
-      { account_id }: { account_id: string }
-    ) => {
+
+    account: async (_: never, { account_id }: { account_id: string }) => {
       try {
         return await Account.findOne({ account_id });
       } catch (error) {
-        // If 'error' is already an Error object, throw it directly.
         if (error instanceof Error) {
           throw error;
         } else {
-          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
           throw new Error(String(error));
         }
       }
     },
-    // Resolver for fetching multiple customers
+
     customers: async () => {
       try {
         return await Customer.find();
       } catch (error) {
-        // If 'error' is already an Error object, throw it directly.
         if (error instanceof Error) {
           throw error;
         } else {
-          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
           throw new Error(String(error));
         }
       }
     },
-    // Resolver for fetching a single customer by username
-    customer: async (
-      _: Record<string, unknown>,
-      { username }: { username: string }
-    ) => {
+
+    customerWithBalances: async (_: never, { id }: { id: string }): Promise<CustomerBalance | null> => {
       try {
-        return await Customer.findOne({ username });
-      } catch (error) {
-        // If 'error' is already an Error object, throw it directly.
-        if (error instanceof Error) {
-          throw error;
-        } else {
-          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
-          throw new Error(String(error));
+        await client.connect();
+        const database = client.db("sample_analytics");
+        const collection = database.collection("customers");
+        const pipeline = [
+          { $match: { customer_id: id } },
+          { $unwind: "$accounts" },
+          {
+            $group: {
+              _id: "$accounts.product",
+              balance: { $sum: "$accounts.balance" },
+              customer_name: { $first: "$name" }
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              product: "$_id",
+              balance: 1,
+              customer_name: 1,
+            },
+          },
+        ];
+        const result = await collection.aggregate(pipeline).toArray();
+        if (result.length === 0) {
+          return null;
         }
+        return {
+          id,
+          name: result[0].customer_name,
+          accountBalances: result.map((item) => ({
+            product: item.product,
+            balance: item.balance,
+          })),
+        };
+      } catch (error) {
+        console.error("Error in customerWithBalances resolver:", error);
+        throw new Error("Failed to fetch customer balances");
+      } finally {
+        await client.close();
       }
     },
-    // Resolver for fetching transaction buckets by account ID
-    transactionBuckets: async (
-      _: Record<string, unknown>,
-      { account_id }: { account_id: string }
-    ) => {
+
+    customer: async (_: never, { id }: { id: string }) => {
+      try {
+        await client.connect();
+        const database = client.db("sample_analytics");
+        const collection = database.collection("customers");
+        const pipeline = [
+          { $match: { customer_id: id } },
+          { $unwind: "$accounts" },
+          {
+            $group: {
+              _id: "$accounts.product",
+              balance: { $sum: "$accounts.balance" },
+              customer_name: { $first: "$name" }
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              product: "$_id",
+              balance: 1,
+              customer_name: 1,
+            },
+          },
+        ];
+        const result = await collection.aggregate(pipeline).toArray();
+        return {
+          id,
+          name: result[0]?.customer_name,
+          accountBalances: result.map((item) => ({
+            product: item.product,
+            balance: item.balance,
+          })),
+        };
+      } finally {
+        await client.close();
+      }
+    },
+
+    transactionBuckets: async (_: never, { account_id }: { account_id: string }) => {
       try {
         return await TransactionBucket.find({ account_id });
       } catch (error) {
-        // If 'error' is already an Error object, throw it directly.
         if (error instanceof Error) {
           throw error;
         } else {
-          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
           throw new Error(String(error));
         }
       }
     },
-    // Resolver for calculating account balances for a given customer
-    accountBalances: async (
-      _: Record<string, unknown>,
-      { username }: { username: string }
-    ) => {
+
+    accountBalances: async (_: never, { username }: { username: string }) => {
       try {
         const customer = await Customer.findOne({ username });
-        if (!customer) return []; // Return an empty array if the customer is not found
+        if (!customer) return [];
 
-        // Calculate the balance for each account associated with the customer
         const balances = await Promise.all(
           customer.accounts.map(async (accountId) => {
             const transactionBuckets = await TransactionBucket.find({
               account_id: accountId,
             });
             const balance = transactionBuckets.reduce((sum, bucket) => {
-              // Calculate the balance by summing the amounts of 'buy' and 'sell' transactions
               return (
                 sum +
                 bucket.transactions.reduce((bucketSum, transaction) => {
@@ -148,16 +204,15 @@ export const resolvers = {
 
         return balances;
       } catch (error) {
-        // If 'error' is already an Error object, throw it directly.
         if (error instanceof Error) {
           throw error;
         } else {
-          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
           throw new Error(String(error));
         }
       }
     },
   },
+
   Customer: {
     tier_and_details: async (parent: Record<string, unknown>) => {
       try {
@@ -165,11 +220,9 @@ export const resolvers = {
           parent.tier_and_details as { [s: string]: unknown }
         );
       } catch (error) {
-        // If 'error' is already an Error object, throw it directly.
         if (error instanceof Error) {
           throw error;
         } else {
-          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
           throw new Error(String(error));
         }
       }
