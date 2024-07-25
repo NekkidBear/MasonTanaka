@@ -14,7 +14,7 @@ const startServer = async () => {
 
   // Configure CORS to allow requests from the frontend origin
   const corsOptions = {
-    origin: "https://graphql-frontend-gold.vercel.app", // Ensure no trailing slash
+    origin: "https://graphql-frontend-gold.vercel.app", 
     credentials: true, // Allows credentials (cookies, authorization headers, etc.)
     optionsSuccessStatus: 200, // Some legacy browsers choke on 204
   };
