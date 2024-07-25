@@ -3,7 +3,9 @@ import { Customer } from "../../models/Customer";
 import { TransactionBucket } from "../../models/TransactionBucket";
 import { GraphQLScalarType, Kind } from "graphql";
 import { MongoClient } from "mongodb";
+import dotenv from 'dotenv'
 
+dotenv.config()
 // MongoDb setup
 const uri = process.env.MONGODB_CONNECTION_STRING;
 if (!uri) {
