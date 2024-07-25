@@ -20,9 +20,12 @@ const startServer = async () => {
   };
   app.use(cors(corsOptions)); // Use CORS middleware with the specified options
 
-  // Log CORS requests for debugging
+  // Handle OPTIONS requests
+  app.options('*', cors(corsOptions));
+
+  // Log all requests for debugging
   app.use((req, res, next) => {
-    console.log(`CORS request from origin: ${req.headers.origin}`);
+    console.log(`${req.method} request from origin: ${req.headers.origin} to ${req.url}`);
     next();
   });
 
@@ -68,3 +71,36 @@ const startServer = async () => {
 };
 
 startServer(); // Call the function to start the server
+
+/**
+ * Troubleshooting and Maintenance Notes:
+ * 
+ * 1. CORS Issues:
+ *    - If you encounter CORS issues, ensure that the `origin` in `corsOptions` matches the frontend URL.
+ *    - Check the browser console for CORS errors and adjust the `corsOptions` accordingly.
+ * 
+ * 2. MongoDB Connection:
+ *    - Ensure that the `MONGODB_CONNECTION_STRING` environment variable is correctly set in your `.env` file.
+ *    - If the connection fails, verify the connection string and check MongoDB server status.
+ *    - Look for detailed error messages in the console to diagnose connection issues.
+ * 
+ * 3. Environment Variables:
+ *    - Make sure to create a `.env` file in the root directory with all necessary environment variables.
+ *    - Example:
+ *      ```
+ *      MONGODB_CONNECTION_STRING=mongodb://your_mongodb_uri
+ *      PORT=5001
+ *      ```
+ * 
+ * 4. Server Port:
+ *    - The server defaults to port 5001 if the `PORT` environment variable is not set.
+ *    - Ensure the port is not in use by another application.
+ * 
+ * 5. Debugging Requests:
+ *    - All incoming requests are logged to the console for debugging purposes.
+ *    - Check the logs to trace request origins and paths.
+ * 
+ * 6. Apollo Server:
+ *    - If GraphQL queries are not working, ensure that the `typeDefs` and `resolvers` are correctly defined and imported.
+ *    - Use Apollo Server's built-in playground to test queries and mutations.
+ */
