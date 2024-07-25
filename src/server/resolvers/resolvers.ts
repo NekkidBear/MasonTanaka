@@ -34,54 +34,145 @@ export const resolvers = {
   Date: dateScalar, // Register the custom Date scalar type
   Query: {
     // Resolver for fetching multiple accounts
-    accounts: () => Account.find(),
+    accounts: async () => {
+      try {
+        return await Account.find();
+      } catch (error) {
+        // If 'error' is already an Error object, throw it directly.
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
+          throw new Error(String(error));
+        }
+      }
+    },
     // Resolver for fetching a single account by ID
-    account: (_: Record<string, unknown>, { account_id }: { account_id: string }) =>
-      Account.findOne({ account_id }),
+    account: async (
+      _: Record<string, unknown>,
+      { account_id }: { account_id: string }
+    ) => {
+      try {
+        return await Account.findOne({ account_id });
+      } catch (error) {
+        // If 'error' is already an Error object, throw it directly.
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
+          throw new Error(String(error));
+        }
+      }
+    },
     // Resolver for fetching multiple customers
-    customers: () => Customer.find(),
+    customers: async () => {
+      try {
+        return await Customer.find();
+      } catch (error) {
+        // If 'error' is already an Error object, throw it directly.
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
+          throw new Error(String(error));
+        }
+      }
+    },
     // Resolver for fetching a single customer by username
-    customer: (_: Record<string, unknown>, { username }: { username: string }) =>
-      Customer.findOne({ username }),
+    customer: async (
+      _: Record<string, unknown>,
+      { username }: { username: string }
+    ) => {
+      try {
+        return await Customer.findOne({ username });
+      } catch (error) {
+        // If 'error' is already an Error object, throw it directly.
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
+          throw new Error(String(error));
+        }
+      }
+    },
     // Resolver for fetching transaction buckets by account ID
-    transactionBuckets: (_: Record<string, unknown>, { account_id }: { account_id: string }) =>
-      TransactionBucket.find({ account_id }),
+    transactionBuckets: async (
+      _: Record<string, unknown>,
+      { account_id }: { account_id: string }
+    ) => {
+      try {
+        return await TransactionBucket.find({ account_id });
+      } catch (error) {
+        // If 'error' is already an Error object, throw it directly.
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
+          throw new Error(String(error));
+        }
+      }
+    },
     // Resolver for calculating account balances for a given customer
-    accountBalances: async (_: Record<string, unknown>, { username }: { username: string }) => {
-      const customer = await Customer.findOne({ username });
-      if (!customer) return []; // Return an empty array if the customer is not found
+    accountBalances: async (
+      _: Record<string, unknown>,
+      { username }: { username: string }
+    ) => {
+      try {
+        const customer = await Customer.findOne({ username });
+        if (!customer) return []; // Return an empty array if the customer is not found
 
-      // Calculate the balance for each account associated with the customer
-      const balances = await Promise.all(
-        customer.accounts.map(async (accountId) => {
-          const transactionBuckets = await TransactionBucket.find({
-            account_id: accountId,
-          });
-          const balance = transactionBuckets.reduce((sum, bucket) => {
-            // Calculate the balance by summing the amounts of 'buy' and 'sell' transactions
-            return (
-              sum +
-              bucket.transactions.reduce((bucketSum, transaction) => {
-                const amount = transaction?.amount ?? 0;
-                return (
-                  bucketSum +
-                  (transaction?.transaction_code === "buy"
-                    ? -amount
-                    : amount ?? 0)
-                );
-              }, 0)
-            );
-          }, 0);
-          return { account_id: accountId, balance };
-        })
-      );
+        // Calculate the balance for each account associated with the customer
+        const balances = await Promise.all(
+          customer.accounts.map(async (accountId) => {
+            const transactionBuckets = await TransactionBucket.find({
+              account_id: accountId,
+            });
+            const balance = transactionBuckets.reduce((sum, bucket) => {
+              // Calculate the balance by summing the amounts of 'buy' and 'sell' transactions
+              return (
+                sum +
+                bucket.transactions.reduce((bucketSum, transaction) => {
+                  const amount = transaction?.amount ?? 0;
+                  return (
+                    bucketSum +
+                    (transaction?.transaction_code === "buy"
+                      ? -amount
+                      : amount ?? 0)
+                  );
+                }, 0)
+              );
+            }, 0);
+            return { account_id: accountId, balance };
+          })
+        );
 
-      return balances;
+        return balances;
+      } catch (error) {
+        // If 'error' is already an Error object, throw it directly.
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
+          throw new Error(String(error));
+        }
+      }
     },
   },
   Customer: {
-      tier_and_details: (parent: Record<string, unknown>) => {
-        return Object.values(parent.tier_and_details as { [s: string]: unknown });
-      },
+    tier_and_details: async (parent: Record<string, unknown>) => {
+      try {
+        return Object.values(
+          parent.tier_and_details as { [s: string]: unknown }
+        );
+      } catch (error) {
+        // If 'error' is already an Error object, throw it directly.
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          // If 'error' is not an Error object, convert it to a string and throw it as a new Error.
+          throw new Error(String(error));
+        }
+      }
     },
+  },
 };
