@@ -131,13 +131,13 @@ describe('Resolver Tests', () => {
       };
 
       const result = resolvers.Customer.tier_and_details(mockCustomer);
-      expect(result).toEqual([
-        { tier: 'Gold', benefits: ['benefit1'], active: true, id: '1' },
-        { tier: 'Silver', benefits: ['benefit2'], active: false, id: '2' }
-      ]);
-    });
-  });
-});
+      expect(result).toEqual({
+        Gold: { benefits: ['benefit1'], active: true, id: '1' },
+        Silver: { benefits: ['benefit2'], active: false, id: '2' }
+      });
+          });
+        });
+      });
 
 // General Maintenance Notes:
 // 1. Keep these tests in sync with your resolver implementations. When you modify a resolver, update its corresponding test.
